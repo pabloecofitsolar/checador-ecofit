@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#009B40">
+<title>Checador Ecofit</title>
+<style>
+  :root {
+    --verde: #009B40; --verde-osc: #007A33; --verde-claro: #E6F5EC; --gris: #737272; --fondo: #F5F5F5;
+    --texto: #111; --rojo: #C62828; --rojo-claro: #FDECEA; --amarillo: #EEE04E; --aviso: #FFF6D6; --blanco: #fff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--fondo); color: var(--texto); font-family: Arial, Helvetica, sans-serif; -webkit-text-size-adjust: 100%; }
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  .top { background: var(--verde); color: #fff; padding: 14px 16px 16px; text-align: center; border-bottom: 4px solid var(--verde-osc); }
+  .marca { font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+  .marca span { font-weight: 400; opacity: .85; }
+  .reloj { font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 6px; }
+  .fecha { font-size: 14px; opacity: .9; }
+  main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 18px 16px 28px; }
+  h1 { font-size: 24px; margin: 4px 0 6px; }
+  h2 { font-size: 18px; margin: 18px 0 8px; color: var(--verde-osc); }
+  .sub { color: var(--gris); margin: 0 0 14px; font-size: 15px; }
+  .btn { display: block; width: 100%; border: 0; border-radius: 14px; padding: 16px; font-size: 18px; font-weight: 700; margin: 10px 0;
+         cursor: pointer; text-align: center; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+  .btn:active { transform: scale(.98); }
+  .btn[disabled] { opacity: .45; }
+  .primario { background: var(--verde); color: #fff; }
+  .rojo { background: var(--rojo); color: #fff; }
+  .secundario { background: #fff; color: var(--verde-osc); border: 2px solid var(--verde); }
+  .grande { padding: 26px 16px; font-size: 24px; }
+  .liga { background: none; border: 0; color: var(--gris); text-decoration: underline; font-size: 15px; padding: 10px; cursor: pointer; font-family: inherit; }
+  .btn.liga { font-weight: 400; }
+  .tarjeta { background: #fff; border-radius: 14px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin: 8px 0 14px; }
+  .fila-marca { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #eee; }
+  .fila-marca:last-child { border-bottom: 0; }
+  .fila-marca b { font-variant-numeric: tabular-nums; min-width: 52px; }
+  .vacio { color: var(--gris); margin: 4px 0; }
+  .lista .btn { text-align: left; display: flex; align-items: center; gap: 14px; }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--verde-claro); color: var(--verde-osc); display: inline-flex;
+            align-items: center; justify-content: center; font-size: 20px; flex: none; }
+  .pin { width: 100%; font-size: 32px; letter-spacing: .5em; text-align: center; padding: 14px; border: 2px solid #ccc; border-radius: 14px; }
+  .pin:focus, input:focus, select:focus { outline: 3px solid var(--verde); border-color: var(--verde); }
+  .error { background: var(--rojo-claro); color: var(--rojo); padding: 12px 14px; border-radius: 12px; font-size: 15px; }
+  .aviso { background: var(--aviso); padding: 12px 14px; border-radius: 12px; font-size: 15px; margin: 8px 0; }
+  .paso { display: flex; gap: 12px; align-items: flex-start; background: #fff; border-radius: 12px; padding: 12px 14px; margin: 8px 0; border-left: 6px solid #ccc; }
+  .paso.bien { border-left-color: var(--verde); }
+  .paso.mal { border-left-color: var(--rojo); }
+  .paso .ico { font-size: 22px; line-height: 1; }
+  .paso .txt { flex: 1; font-size: 15px; }
+  .paso button { margin-top: 8px; }
+  #preview { width: 100%; max-height: 340px; object-fit: cover; border-radius: 14px; margin: 6px 0; background: #ddd; }
+  input[type=text], input[type=date], input[type=time], input[type=number], select {
+    width: 100%; font-size: 17px; padding: 12px; border: 2px solid #ccc; border-radius: 12px; margin: 4px 0 10px; background: #fff; font-family: inherit; }
+  label.campo { font-size: 14px; color: var(--gris); display: block; margin-top: 6px; }
+  .check { width: 96px; height: 96px; border-radius: 50%; background: var(--verde); color: #fff; font-size: 60px; display: flex;
+           align-items: center; justify-content: center; margin: 10px auto 6px; }
+  .check.pend { background: #F0A500; font-size: 46px; }
+  #v-ok { text-align: center; }
+  .hora-grande { font-size: 40px; font-weight: 700; margin: 4px 0; font-variant-numeric: tabular-nums; }
+  footer { text-align: center; padding: 10px 16px 18px; color: var(--gris); font-size: 12px; }
+  .spinner { width: 42px; height: 42px; border: 4px solid #ddd; border-top-color: var(--verde); border-radius: 50%; margin: 40px auto 12px; animation: g 1s linear infinite; }
+  @keyframes g { to { transform: rotate(360deg); } }
+  .centro { text-align: center; }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; margin: 6px 0 10px; padding-bottom: 4px; }
+  .tabs button { flex: none; border: 2px solid var(--verde); background: #fff; color: var(--verde-osc); border-radius: 999px; padding: 8px 14px;
+                 font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .tabs button.on { background: var(--verde); color: #fff; }
+  .reg { background: #fff; border-radius: 12px; padding: 10px 12px; margin: 8px 0; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .reg.anulado { opacity: .5; text-decoration: line-through; }
+  .reg .t { font-weight: 700; font-size: 15px; }
+  .alerta { color: var(--rojo); font-size: 13px; margin-top: 3px; }
+  .chip { display: inline-block; background: var(--verde-claro); color: var(--verde-osc); border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 700; }
+  .chip.gris { background: #eee; color: #555; }
+  .mini { font-size: 13px; color: var(--gris); }
+  .acciones-reg { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .acciones-reg a, .acciones-reg button { font-size: 14px; color: var(--verde-osc); background: none; border: 0; padding: 4px 0; text-decoration: underline; cursor: pointer; font-family: inherit; }
+  #cartel { background: #fff; border: 6px solid var(--verde); border-radius: 18px; padding: 22px 16px; text-align: center; }
+  #cartel .t1 { font-weight: 700; letter-spacing: .08em; color: var(--verde); }
+  #cartel .t2 { font-size: 30px; font-weight: 700; margin: 6px 0 14px; }
+  #qr { display: inline-block; padding: 10px; background: #fff; }
+  #cartel ol { text-align: left; margin: 14px auto 0; max-width: 320px; font-size: 16px; line-height: 1.5; padding-left: 22px; }
+  .url { word-break: break-all; font-size: 12px; color: var(--gris); }
+  details { background: #fff; border-radius: 12px; padding: 10px 12px; margin: 10px 0; }
+  code { word-break: break-all; }
+  /* Cámara dentro de la página: no abre la app de cámara, así Android no cierra Chrome por memoria */
+  #camara { position: fixed; inset: 0; background: #000; z-index: 50; display: flex; flex-direction: column; }
+  #camara video { flex: 1; width: 100%; min-height: 0; object-fit: cover; transform: scaleX(-1); }
+  #camara .barra { padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); display: flex; gap: 10px; background: #000; }
+  #camara .barra .btn { margin: 0; }
+  #camara .msg { color: #fff; text-align: center; padding: 10px 16px 0; font-size: 15px; }
+  [hidden] { display: none !important; }
+  @media print {
+    body * { visibility: hidden; }
+    #cartel, #cartel * { visibility: visible; }
+    #cartel { position: absolute; left: 0; top: 0; width: 100%; border-width: 10px; }
+    .top, footer, .tabs { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="marca">ECOFIT <span>SOLAR SOLUTIONS</span> · CHECADOR</div>
+  <div class="reloj" id="reloj">--:--:--</div>
+  <div class="fecha" id="fecha">&nbsp;</div>
+</header>
+
+<main>
+  <section id="v-cargando" class="vista centro">
+    <div class="spinner"></div>
+    <p class="sub" id="cargando-txt">Cargando…</p>
+  </section>
+
+  <section id="v-quien" class="vista" hidden>
+    <h1>¿Quién eres?</h1>
+    <p class="sub">Solo se pregunta la primera vez en este teléfono.</p>
+    <div id="lista-personas" class="lista"></div>
+  </section>
+
+  <section id="v-pin" class="vista" hidden>
+    <h1 id="pin-titulo">Hola</h1>
+    <p class="sub">Escribe tu PIN de 4 dígitos (te lo da Pablo).</p>
+    <input id="pin" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off">
+    <p id="pin-error" class="error" hidden></p>
+    <button id="btn-pin" class="btn primario">Entrar</button>
+    <button class="btn liga" id="btn-pin-volver">No soy yo</button>
+  </section>
+
+  <section id="v-principal" class="vista" hidden>
+    <h1 id="saludo">Hola</h1>
+    <p class="sub" id="horario-hoy"></p>
+    <div id="cola-aviso" class="aviso" hidden></div>
+    <div class="tarjeta"><div class="mini">Tus registros de hoy</div><div id="hoy"></div></div>
+    <div class="tarjeta" id="mi-semana" hidden></div>
+    <p id="principal-nota" class="sub" hidden></p>
+    <div id="acciones"></div>
+    <button class="btn liga" id="btn-cambiar">¿No eres tú? Cambiar persona</button>
+  </section>
+
+  <section id="v-captura" class="vista" hidden>
+    <h1 id="cap-titulo">Entrada</h1>
+    <div class="paso" id="paso-gps"><span class="ico">📍</span><div class="txt"><span class="msg">Buscando tu ubicación…</span></div></div>
+    <div class="paso" id="paso-foto"><span class="ico">📷</span><div class="txt"><span class="msg">Falta tu selfie</span></div></div>
+    <img id="preview" alt="Tu selfie" hidden>
+    <button type="button" class="btn secundario" id="btn-foto">📷 Tomar selfie</button>
+    <input id="foto" type="file" accept="image/*" capture="user" hidden>
+    <div id="caja-nota" hidden>
+      <p id="nota-msg" class="aviso"></p>
+      <input id="nota" type="text" maxlength="120" placeholder="Ej. Casa de Robert, El Jalito">
+    </div>
+    <p id="cap-error" class="error" hidden></p>
+    <button id="btn-enviar" class="btn primario grande" disabled>Registrar</button>
+    <button class="btn liga" id="btn-cancelar">Cancelar</button>
+  </section>
+
+  <section id="v-ok" class="vista" hidden>
+    <div class="check" id="ok-icono">✓</div>
+    <h1 id="ok-titulo">Entrada registrada</h1>
+    <p class="hora-grande" id="ok-hora"></p>
+    <p class="sub" id="ok-lugar"></p>
+    <div id="ok-alertas"></div>
+    <button class="btn primario" id="btn-listo">Listo</button>
+  </section>
+
+  <section id="v-admin-login" class="vista" hidden>
+    <h1>Panel de Pablo</h1>
+    <p class="sub">PIN de administrador (hoja Config).</p>
+    <input id="admin-pin" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off">
+    <p id="admin-error" class="error" hidden></p>
+    <button id="btn-admin-entrar" class="btn primario">Entrar</button>
+    <button class="btn liga" id="btn-admin-volver">Volver al checador</button>
+  </section>
+
+  <section id="v-admin" class="vista" hidden>
+    <h1>Panel de Pablo</h1>
+    <div class="tabs" id="tabs">
+      <button data-tab="hoy" class="on">Hoy</button>
+      <button data-tab="manual">Marcar a mano</button>
+      <button data-tab="registros">Registros</button>
+      <button data-tab="lugares">Lugares</button>
+      <button data-tab="qr">Cartel QR</button>
+    </div>
+    <p id="admin-msg" class="aviso" hidden></p>
+
+    <div id="tab-hoy" class="tab"></div>
+
+    <div id="tab-manual" class="tab" hidden>
+      <p class="sub">Para cuando a alguien se le apagó el teléfono o se le olvidó marcar. Queda como MANUAL con tu motivo.</p>
+      <label class="campo" for="m-persona">Persona</label><select id="m-persona"></select>
+      <label class="campo" for="m-tipo">Tipo</label><select id="m-tipo"></select>
+      <label class="campo" for="m-fecha">Fecha</label><input id="m-fecha" type="date">
+      <label class="campo" for="m-hora">Hora</label><input id="m-hora" type="time">
+      <label class="campo" for="m-motivo">Motivo (obligatorio)</label><input id="m-motivo" type="text" maxlength="150" placeholder="Ej. Se le acabó la pila, llegó 8:05 (lo vi)">
+      <button class="btn primario" id="btn-m-guardar">Guardar registro manual</button>
+    </div>
+
+    <div id="tab-registros" class="tab" hidden></div>
+
+    <div id="tab-lugares" class="tab" hidden>
+      <p class="sub">El checador reconoce estos lugares por GPS. Si alguien marca lejos de todos, tiene que escribir en qué obra está.</p>
+      <div id="lista-lugares"></div>
+      <h2>Guardar dónde estoy ahora</h2>
+      <label class="campo" for="l-nombre">Nombre del lugar</label><input id="l-nombre" type="text" maxlength="60" placeholder="Oficina Ecofit (La Paz)">
+      <label class="campo" for="l-radio">Radio (metros)</label><input id="l-radio" type="number" value="250" min="50" max="5000">
+      <button class="btn primario" id="btn-l-guardar">📍 Usar mi ubicación y guardar</button>
+      <p class="mini">Párate en el lugar (oficina u obra) con el GPS prendido. Si el nombre ya existe, se actualiza.</p>
+    </div>
+
+    <div id="tab-qr" class="tab" hidden>
+      <div id="cartel">
+        <div class="t1">ECOFIT SOLAR SOLUTIONS</div>
+        <div class="t2">CHECADOR</div>
+        <div id="qr"></div>
+        <ol>
+          <li>Escanea con la cámara de tu celular.</li>
+          <li>Toca <b>ENTRADA</b> o <b>SALIDA</b>.</li>
+          <li>Tómate la selfie y listo.</li>
+        </ol>
+      </div>
+      <button class="btn primario" id="btn-imprimir">🖨️ Imprimir cartel</button>
+      <p class="mini">Si no imprime desde el celular: toma captura de pantalla del cartel, o ábrelo en la computadora.</p>
+      <p class="url" id="qr-url"></p>
+      <details><summary>Clave para la PC (SINCRONIZAR_CHECADOR.bat)</summary><p class="mini">Te la pide la primera vez que corres el .bat. No la compartas.</p><code id="qr-clave"></code></details>
+    </div>
+
+    <p class="centro"><a id="link-hoja" href="#" target="_blank" rel="noopener" style="color:var(--verde-osc)">Abrir la hoja de cálculo</a></p>
+    <button class="btn liga" id="btn-admin-salir">Salir del panel</button>
+  </section>
+</main>
+
+<div id="camara" hidden>
+  <p class="msg" id="cam-msg">Acomódate y toca «Tomar foto»</p>
+  <video id="cam-video" autoplay playsinline muted></video>
+  <div class="barra">
+    <button type="button" class="btn secundario" id="btn-cam-cancelar">Cancelar</button>
+    <button type="button" class="btn primario" id="btn-cam-tomar" disabled>📷 Tomar foto</button>
+  </div>
+</div>
+
+<footer>
+  <button class="liga" id="btn-admin">Soy Pablo · administrar</button>
+  <div id="version"></div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var TIPO_TXT = { ENTRADA: 'Entrada', SALIDA_COMIDA: 'Salida a comer', REGRESO_COMIDA: 'Regreso de comer', SALIDA: 'Salida' };
+  var ICONO = { ENTRADA: '▶', SALIDA_COMIDA: '🍽️', REGRESO_COMIDA: '↩', SALIDA: '■' };
+  var TZ = 'America/Mazatlan';
+  var S = { dev: null, persona: null, pin: null, offset: 0, info: null, sesion: null, tipo: null, gps: null, gpsFallo: false,
+            foto: null, fotoEdad: null, enviando: false, adminPin: null, admin: null, personaTmp: null, watch: null };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function ls(k, v) {
+    try {
+      if (v === undefined) return localStorage.getItem(k);
+      if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v);
+    } catch (e) { return null; }
+    return null;
+  }
+  function uuid() {
+    try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+    return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+  }
+  function ver(id) {
+    var vs = document.querySelectorAll('.vista');
+    for (var i = 0; i < vs.length; i++) vs[i].hidden = vs[i].id !== 'v-' + id;
+    window.scrollTo(0, 0);
+  }
+  // La página vive fuera de Apps Script (para poder usar la cámara) y llama al
+  // mismo script por POST. text/plain evita el preflight de CORS.
+  var API = 'https://script.google.com/macros/s/AKfycbzTYHEK7yPs6jUbIoY3FPBfuUbzw3CWXPK-7gs9H4KOuh2ZRBbhZGLHlSRI2H6yDF9H/exec';
+  function run(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function (r) {
+        if (!r.ok) throw new Error('El checador respondió HTTP ' + r.status + '. Intenta otra vez.');
+        return r.json().catch(function () { throw new Error('Respuesta rara del checador. Intenta otra vez.'); });
+      })
+      .then(function (x) { if (x.e) throw new Error(x.e); return x.r; });
+  }
+  function msgError(e) { return (e && e.message) ? e.message : String(e); }
+  function esRed(e) { var m = msgError(e); return !navigator.onLine || /network|red|connection|conexi|failed to fetch|http 0/i.test(m); }
+  function ahoraServidor() { return Date.now() + S.offset; }
+
+  // ---------- Reloj con la hora del servidor ----------
+  var fH, fF;
+  try {
+    fH = new Intl.DateTimeFormat('es-MX', { timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    fF = new Intl.DateTimeFormat('es-MX', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' });
+  } catch (e) {
+    fH = { format: function (d) { return d.toTimeString().slice(0, 8); } };
+    fF = { format: function (d) { return d.toDateString(); } };
+  }
+  function tic() { var d = new Date(ahoraServidor()); $('reloj').textContent = fH.format(d); var f = fF.format(d); $('fecha').textContent = f.charAt(0).toUpperCase() + f.slice(1); }
+  setInterval(tic, 1000); tic();
+
+  // ---------- Arranque ----------
+  function iniciar() {
+    S.dev = ls('eco_dev'); if (!S.dev) { S.dev = uuid(); ls('eco_dev', S.dev); }
+    S.persona = ls('eco_persona'); S.pin = ls('eco_pin');
+    var t0 = Date.now();
+    run('getInicio', S.dev, S.persona || '', S.pin || '').then(function (r) {
+      S.offset = r.servidorMs - Math.round((t0 + Date.now()) / 2);
+      S.info = r; tic();
+      $('version').textContent = 'v' + r.version;
+      if (r.sesion) { S.sesion = r.sesion; pintarPrincipal(); ver('principal'); enviarCola(); }
+      else {
+        if (r.sesionInvalida) olvidarSesion();
+        pintarPersonas(); ver('quien');
+      }
+    }).catch(function (e) {
+      $('cargando-txt').innerHTML = 'No pude conectar con el checador.<br>' + esc(msgError(e)) +
+        '<br><br><button class="btn primario" onclick="location.reload()">Reintentar</button>';
+    });
+  }
+  function olvidarSesion() { ls('eco_persona', null); ls('eco_pin', null); S.persona = null; S.pin = null; S.sesion = null; }
+
+  // ---------- ¿Quién eres? + PIN ----------
+  function pintarPersonas() {
+    var html = '';
+    (S.info.personas || []).forEach(function (n) {
+      html += '<button class="btn secundario" data-persona="' + esc(n) + '"><span class="avatar">' + esc(n.charAt(0)) + '</span>' + esc(n) + '</button>';
+    });
+    $('lista-personas').innerHTML = html || '<p class="error">No hay personas activas en la hoja Personal.</p>';
+  }
+  $('lista-personas').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-persona]'); if (!b) return;
+    S.personaTmp = b.getAttribute('data-persona');
+    $('pin-titulo').textContent = 'Hola, ' + S.personaTmp.split(' ')[0];
+    $('pin').value = ''; $('pin-error').hidden = true; ver('pin'); $('pin').focus();
+  });
+  $('btn-pin-volver').addEventListener('click', function () { ver('quien'); });
+  $('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btn-pin').click(); });
+  $('btn-pin').addEventListener('click', function () {
+    var pin = $('pin').value.trim(); if (!pin) return;
+    var b = $('btn-pin'); b.disabled = true; b.textContent = 'Revisando…';
+    run('vincular', S.personaTmp, pin, S.dev, navigator.userAgent).then(function (r) {
+      if (!r.ok) { $('pin-error').textContent = r.msg; $('pin-error').hidden = false; return; }
+      S.persona = S.personaTmp; S.pin = pin; ls('eco_persona', S.persona); ls('eco_pin', pin);
+      S.sesion = r.sesion; pintarPrincipal(); ver('principal');
+    }).catch(function (e) { $('pin-error').textContent = msgError(e); $('pin-error').hidden = false; })
+      .then(function () { b.disabled = false; b.textContent = 'Entrar'; });
+  });
+  $('btn-cambiar').addEventListener('click', function () { olvidarSesion(); pintarPersonas(); ver('quien'); });
+
+  // ---------- Pantalla principal ----------
+  function pintarPrincipal() {
+    var s = S.sesion;
+    $('saludo').textContent = 'Hola, ' + s.persona.split(' ')[0];
+    $('horario-hoy').textContent = s.horarioHoy || '';
+    var cola = leerCola().filter(function (x) { return x.p.persona === s.persona; });
+    var marcas = s.marcas.slice();
+    cola.forEach(function (x) { marcas.push({ hora: x.horaTxt, tipoTxt: TIPO_TXT[x.p.tipo], pendiente: true }); });
+    $('hoy').innerHTML = marcas.length ? marcas.map(function (m) {
+      return '<div class="fila-marca"><b>' + esc(m.hora) + '</b><span>' + esc(m.tipoTxt) +
+        (m.pendiente ? ' <span class="chip gris">por enviar</span>' : '') + (m.alertas ? ' <span title="' + esc(m.alertas) + '">⚠️</span>' : '') + '</span></div>';
+    }).join('') : '<p class="vacio">Aún no tienes registros hoy.</p>';
+    $('cola-aviso').hidden = !cola.length;
+    $('cola-aviso').textContent = cola.length ? 'Hay ' + cola.length + ' registro(s) guardados en el teléfono por falta de señal. Se envían solos cuando haya internet.' : '';
+
+    var sem = s.semana;
+    $('mi-semana').hidden = !(sem && sem.dias && sem.dias.length);
+    if (sem && sem.dias && sem.dias.length) {
+      $('mi-semana').innerHTML = '<div class="mini">Tu semana (se actualiza cada 30 min)</div>' + sem.dias.map(function (d) {
+        return '<div class="fila-marca"><b>' + esc(String(d.dia).slice(0, 3)) + '</b><span>' + esc(d.entrada || '—') + '–' + esc(d.salida || '—') +
+          ' · ' + esc(d.horas) + ' h' + (d.extra ? ' · <b>+' + esc(d.extra) + ' h extra</b>' : '') +
+          (/FALTA|Retardo|SIN/.test(d.estado || '') ? ' · <span style="color:var(--rojo)">' + esc(d.estado) + '</span>' : '') + '</span></div>';
+      }).join('') + '<div class="fila-marca"><b>Total</b><span>' + esc(sem.horas) + ' h trabajadas' + (sem.extra ? ' · ' + esc(sem.extra) + ' h extra' : '') + '</span></div>';
+    }
+    var estado = s.estado;
+    if (cola.length) estado = estadoDe(cola[cola.length - 1].p.tipo);
+    var acciones;
+    if (estado === 'dentro') acciones = S.info.botonesComida ? [['SALIDA', 'rojo grande'], ['SALIDA_COMIDA', 'secundario']] : [['SALIDA', 'rojo grande']];
+    else if (estado === 'comida') acciones = [['REGRESO_COMIDA', 'primario grande'], ['SALIDA', 'secundario']];
+    else acciones = [['ENTRADA', marcas.length ? 'secundario' : 'primario grande']];
+    var nota = $('principal-nota');
+    nota.hidden = !(estado === 'fuera' && marcas.length);
+    nota.textContent = 'Ya registraste tu salida de hoy. Solo marca entrada si vas a volver a trabajar.';
+    $('acciones').innerHTML = acciones.map(function (a) {
+      return '<button class="btn ' + a[1] + '" data-tipo="' + a[0] + '">' + ICONO[a[0]] + '&nbsp; ' + TIPO_TXT[a[0]] + '</button>';
+    }).join('');
+  }
+  function estadoDe(tipo) { return tipo === 'SALIDA' ? 'fuera' : tipo === 'SALIDA_COMIDA' ? 'comida' : 'dentro'; }
+  $('acciones').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tipo]'); if (b) iniciarCaptura(b.getAttribute('data-tipo'));
+  });
+
+  // ---------- Captura: GPS + selfie ----------
+  function paso(id, clase, texto, reintentar) {
+    var el = $('paso-' + id);
+    el.className = 'paso ' + (clase || '');
+    el.querySelector('.msg').textContent = texto;
+    var viejo = el.querySelector('button'); if (viejo) viejo.remove();
+    if (reintentar) {
+      var b = document.createElement('button'); b.className = 'btn secundario'; b.textContent = 'Reintentar ubicación';
+      b.addEventListener('click', pedirGps); el.querySelector('.txt').appendChild(b);
+    }
+  }
+  function iniciarCaptura(tipo) {
+    S.tipo = tipo; S.gps = null; S.gpsFallo = false; S.foto = null; S.fotoEdad = null; S.tsCaptura = null;
+    $('cap-titulo').textContent = TIPO_TXT[tipo];
+    $('preview').hidden = true; $('caja-nota').hidden = true; $('nota').value = ''; $('cap-error').hidden = true;
+    $('btn-foto').textContent = '📷 Tomar selfie';
+    paso('foto', '', S.info.exigirFoto ? 'Falta tu selfie' : 'Selfie (opcional)');
+    ver('captura'); revisarListo(false);
+    pedirGps();
+    abrirCamara();
+  }
+
+  // ---------- Cámara dentro de la página ----------
+  // Si el navegador no la da (o niegan el permiso) se usa la cámara del teléfono como antes.
+  var stream = null, sinCamaraEnPagina = false;
+  function abrirCamara() {
+    // Tras un fallo, el botón abre directo la cámara del teléfono: el click tiene que salir del toque, no de una promesa
+    if (sinCamaraEnPagina || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return camaraDelTelefono();
+    $('cam-msg').textContent = 'Abriendo cámara…'; $('btn-cam-tomar').disabled = true; $('camara').hidden = false;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 1280 } }, audio: false })
+      .then(function (s) {
+        stream = s; var v = $('cam-video'); v.srcObject = s;
+        var p = v.play(); if (p && p.catch) p.catch(function () {});
+        $('cam-msg').textContent = 'Acomódate y toca «Tomar foto»'; $('btn-cam-tomar').disabled = false;
+      })
+      .catch(function (e) {
+        cerrarCamara(); sinCamaraEnPagina = true;
+        paso('foto', 'mal', e && e.name === 'NotAllowedError'
+          ? 'Sin permiso de cámara. Toca el candado ⓘ junto a la dirección → Permisos → Cámara → Permitir. Mientras, toca «Tomar selfie».'
+          : 'No abrió la cámara aquí. Toca «Tomar selfie» para usar la del teléfono.');
+        camaraDelTelefono();
+      });
+  }
+  function cerrarCamara() {
+    if (stream) { stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); stream = null; }
+    $('cam-video').srcObject = null; $('camara').hidden = true;
+  }
+  function camaraDelTelefono() { try { $('foto').value = ''; $('foto').click(); } catch (e) {} }
+  $('btn-foto').addEventListener('click', abrirCamara);
+  $('btn-cam-cancelar').addEventListener('click', cerrarCamara);
+  $('btn-cam-tomar').addEventListener('click', function () {
+    var v = $('cam-video'); if (!v.videoWidth) return;
+    var c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext('2d').drawImage(v, 0, 0); // sin espejo: así se leen los logos del uniforme
+    cerrarCamara();
+    S.fotoEdad = 0; S.tsCaptura = ahoraServidor();
+    paso('foto', '', 'Procesando foto…');
+    sellar(c, c.width, c.height).then(fotoLista);
+  });
+  function fotoLista(data) {
+    S.foto = data; $('preview').src = data; $('preview').hidden = false;
+    paso('foto', 'bien', 'Selfie lista'); $('btn-foto').textContent = '📷 Repetir selfie';
+    revisarListo(true);
+  }
+  function pedirGps() {
+    if (!navigator.geolocation) { S.gpsFallo = true; paso('gps', 'mal', 'Este navegador no da ubicación. Abre el link en Chrome o Safari.'); revisarListo(false); return; }
+    paso('gps', '', 'Buscando tu ubicación…');
+    if (S.watch !== null) { try { navigator.geolocation.clearWatch(S.watch); } catch (e) {} }
+    var mejor = null, listo = false, inicio = Date.now();
+    var terminar = function () {
+      if (listo) return; listo = true;
+      try { navigator.geolocation.clearWatch(S.watch); } catch (e) {}
+      S.watch = null;
+      if (mejor) { S.gps = mejor; paso('gps', 'bien', 'Ubicación lista (±' + mejor.acc + ' m)'); revisarListo(true); }
+    };
+    S.watch = navigator.geolocation.watchPosition(function (p) {
+      var g = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy) };
+      if (!mejor || g.acc < mejor.acc) mejor = g;
+      paso('gps', '', 'Afinando ubicación… (±' + mejor.acc + ' m)');
+      if (mejor.acc <= 50 || Date.now() - inicio > 6000) terminar();
+    }, function (err) {
+      if (mejor) return terminar();
+      listo = true; S.gpsFallo = true;
+      try { navigator.geolocation.clearWatch(S.watch); } catch (e) {}
+      S.watch = null;
+      var m = err && err.code === 1
+        ? 'Sin permiso de ubicación. Toca el candado ⓘ junto a la dirección → Permisos → Ubicación → Permitir. Prende el GPS del teléfono.'
+        : 'No pude obtener tu ubicación. Revisa que el GPS esté prendido y vuelve a intentar.';
+      paso('gps', 'mal', m, true); revisarListo(false);
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    setTimeout(function () { if (!listo && mejor) terminar(); }, 7000);
+  }
+  $('foto').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0]; if (!f) return;
+    S.fotoEdad = f.lastModified ? Math.round((Date.now() - f.lastModified) / 1000) : null;
+    S.tsCaptura = ahoraServidor();
+    paso('foto', '', 'Procesando foto…');
+    comprimir(f).then(fotoLista)
+      .catch(function () { paso('foto', 'mal', 'No pude leer la foto. Intenta otra vez.'); revisarListo(false); });
+  });
+  function comprimir(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () { URL.revokeObjectURL(url); sellar(img, img.width, img.height).then(res); };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('img')); };
+      img.src = url;
+    });
+  }
+  // Reduce a 720 px y pone el sello con nombre, tipo y hora del servidor
+  function sellar(fuente, w, h) {
+    var max = 720, s = Math.min(1, max / Math.max(w, h));
+    var c = document.createElement('canvas'); c.width = Math.round(w * s); c.height = Math.round(h * s);
+    var x = c.getContext('2d'); x.drawImage(fuente, 0, 0, c.width, c.height);
+    var sello = (S.persona || '') + ' · ' + TIPO_TXT[S.tipo] + ' · ' + new Date(ahoraServidor()).toLocaleString('es-MX', { timeZone: TZ });
+    var fs = Math.max(14, Math.round(c.width / 32));
+    x.fillStyle = 'rgba(0,0,0,.55)'; x.fillRect(0, c.height - fs * 1.9, c.width, fs * 1.9);
+    x.fillStyle = '#fff'; x.font = 'bold ' + fs + 'px Arial'; x.fillText(sello, fs * 0.6, c.height - fs * 0.6);
+    return Promise.resolve(c.toDataURL('image/jpeg', 0.62));
+  }
+  function revisarListo(auto) {
+    var gpsOk = !!S.gps || (S.gpsFallo && !S.info.exigirGps);
+    var fotoOk = !!S.foto || !S.info.exigirFoto;
+    var listo = gpsOk && fotoOk && !S.enviando;
+    $('btn-enviar').disabled = !listo;
+    if (listo && auto && $('caja-nota').hidden) enviar();
+  }
+  $('btn-enviar').addEventListener('click', enviar);
+  $('btn-cancelar').addEventListener('click', function () {
+    cerrarCamara();
+    if (S.watch !== null) { try { navigator.geolocation.clearWatch(S.watch); } catch (e) {} S.watch = null; }
+    pintarPrincipal(); ver('principal');
+  });
+
+  function payload() {
+    return { persona: S.persona, pin: S.pin, tipo: S.tipo, lat: S.gps ? S.gps.lat : null, lng: S.gps ? S.gps.lng : null,
+      acc: S.gps ? S.gps.acc : null, foto: S.foto, fotoEdad: S.fotoEdad, deviceId: S.dev, ua: navigator.userAgent.slice(0, 180),
+      nota: $('nota').value.trim(), tsCaptura: S.tsCaptura || ahoraServidor() };
+  }
+  function enviar() {
+    if (S.enviando) return;
+    if (!$('caja-nota').hidden && !$('nota').value.trim()) { $('nota').focus(); return; }
+    S.enviando = true; $('btn-enviar').disabled = true; $('btn-enviar').textContent = 'Enviando…'; $('cap-error').hidden = true;
+    var p = payload();
+    run('registrar', p).then(function (r) {
+      if (r.ok) { S.sesion = r.sesion; mostrarOk(r); }
+      else if (r.pedirNota) { $('nota-msg').textContent = r.msg; $('caja-nota').hidden = false; $('nota').focus(); }
+      else if (r.pinMalo) { olvidarSesion(); pintarPersonas(); ver('quien'); $('lista-personas').insertAdjacentHTML('afterbegin', '<p class="error">' + esc(r.msg) + '</p>'); }
+      else { if (r.sesion) S.sesion = r.sesion; $('cap-error').textContent = r.msg; $('cap-error').hidden = false; }
+    }).catch(function (e) {
+      if (esRed(e)) { guardarEnCola(p); mostrarOk(null, p); }
+      else { $('cap-error').textContent = 'Error: ' + msgError(e); $('cap-error').hidden = false; }
+    }).then(function () { S.enviando = false; $('btn-enviar').textContent = 'Registrar'; revisarListo(false); });
+  }
+  function mostrarOk(r, pendiente) {
+    var alertas = [];
+    if (r) {
+      $('ok-icono').className = 'check'; $('ok-icono').textContent = '✓';
+      $('ok-titulo').textContent = r.tipoTxt + ' registrada';
+      $('ok-hora').textContent = r.hora;
+      $('ok-lugar').textContent = r.lugar ? (r.lugar + (r.distTxt ? ' · ' + r.distTxt : '')) : '';
+      alertas = (r.alertas || []).filter(function (a) { return !/^Teléfono nuevo$/.test(a); });
+    } else {
+      $('ok-icono').className = 'check pend'; $('ok-icono').textContent = '⏳';
+      $('ok-titulo').textContent = 'Guardado sin señal';
+      $('ok-hora').textContent = fH.format(new Date(pendiente.tsCaptura)).slice(0, 5);
+      $('ok-lugar').textContent = 'Se enviará solo cuando haya internet. No borres los datos del navegador.';
+    }
+    $('ok-alertas').innerHTML = alertas.length ? '<p class="aviso">⚠️ ' + alertas.map(esc).join('<br>⚠️ ') + '<br><span class="mini">Pablo lo verá en su reporte.</span></p>' : '';
+    ver('ok');
+  }
+  $('btn-listo').addEventListener('click', function () { pintarPrincipal(); ver('principal'); });
+
+  // ---------- Cola sin señal ----------
+  function leerCola() { try { return JSON.parse(ls('eco_cola') || '[]'); } catch (e) { return []; } }
+  function escribirCola(c) { ls('eco_cola', JSON.stringify(c)); }
+  function guardarEnCola(p) {
+    p.enCola = true; if (!p.nota) p.nota = '(sin señal)';
+    var c = leerCola(); c.push({ p: p, horaTxt: fH.format(new Date(p.tsCaptura)).slice(0, 5) }); escribirCola(c);
+  }
+  var enviandoCola = false;
+  function enviarCola() {
+    var c = leerCola(); if (!c.length || enviandoCola || !navigator.onLine) return;
+    enviandoCola = true;
+    var item = c[0];
+    run('registrar', item.p).then(function (r) {
+      var resto = leerCola().slice(1); escribirCola(resto);
+      if (r && r.sesion && S.persona === item.p.persona) S.sesion = r.sesion;
+      enviandoCola = false;
+      if (!$('v-principal').hidden) pintarPrincipal();
+      if (resto.length) enviarCola();
+    }).catch(function (e) {
+      enviandoCola = false;
+      if (!esRed(e)) { escribirCola(leerCola().slice(1)); } // error del servidor: se descarta para no trabar la cola
+    });
+  }
+  window.addEventListener('online', enviarCola);
+  setInterval(enviarCola, 60000);
+
+  // ---------- Panel de Pablo ----------
+  $('btn-admin').addEventListener('click', function () { $('admin-pin').value = ''; $('admin-error').hidden = true; ver('admin-login'); $('admin-pin').focus(); });
+  $('btn-admin-volver').addEventListener('click', volverChecador);
+  $('btn-admin-salir').addEventListener('click', function () { S.adminPin = null; S.admin = null; volverChecador(); });
+  function volverChecador() { if (S.sesion) { pintarPrincipal(); ver('principal'); } else if (S.info) { pintarPersonas(); ver('quien'); } else location.reload(); }
+  $('admin-pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btn-admin-entrar').click(); });
+  $('btn-admin-entrar').addEventListener('click', function () {
+    var pin = $('admin-pin').value.trim(); if (!pin) return;
+    var b = this; b.disabled = true; b.textContent = 'Entrando…';
+    run('adminEntrar', pin).then(function (r) { S.adminPin = pin; pintarAdmin(r); ver('admin'); verTab('hoy'); })
+      .catch(function (e) { $('admin-error').textContent = msgError(e); $('admin-error').hidden = false; })
+      .then(function () { b.disabled = false; b.textContent = 'Entrar'; });
+  });
+  $('tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-tab]'); if (b) verTab(b.getAttribute('data-tab')); });
+  function verTab(t) {
+    var bs = $('tabs').querySelectorAll('button');
+    for (var i = 0; i < bs.length; i++) bs[i].className = bs[i].getAttribute('data-tab') === t ? 'on' : '';
+    var ts = document.querySelectorAll('.tab');
+    for (var j = 0; j < ts.length; j++) ts[j].hidden = ts[j].id !== 'tab-' + t;
+    if (t === 'qr') pintarQR();
+  }
+  function avisoAdmin(t) { $('admin-msg').textContent = t; $('admin-msg').hidden = !t; }
+
+  function pintarAdmin(r) {
+    S.admin = r; avisoAdmin('');
+    $('link-hoja').href = r.hojaUrl;
+    $('tab-hoy').innerHTML = r.tablero.map(function (p) {
+      var chip = p.estado === 'Trabajando' ? 'chip' : 'chip gris';
+      return '<div class="reg"><div class="t">' + esc(p.persona) + ' <span class="' + chip + '">' + esc(p.estado) + '</span></div>' +
+        (p.marcas.length ? p.marcas.map(function (m) {
+          return '<div>' + esc(m.hora) + ' · ' + esc(m.tipoTxt) + (m.lugar ? ' · <span class="mini">' + esc(m.lugar) + '</span>' : '') +
+            (m.foto ? ' · <a href="' + esc(m.foto) + '" target="_blank" rel="noopener">foto</a>' : '') +
+            (m.alertas ? '<div class="alerta">⚠️ ' + esc(m.alertas) + '</div>' : '') + '</div>';
+        }).join('') : '<div class="mini">Sin registros hoy</div>') + '</div>';
+    }).join('') + '<button class="btn secundario" id="btn-recalcular">Recalcular nómina ahora</button>';
+    $('btn-recalcular').addEventListener('click', function () {
+      avisoAdmin('Recalculando…');
+      run('adminRecalcular', S.adminPin).then(function (x) { pintarAdmin(x); avisoAdmin('Listo: nómina recalculada.'); }).catch(function (e) { avisoAdmin(msgError(e)); });
+    });
+
+    $('m-persona').innerHTML = r.personas.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('');
+    $('m-tipo').innerHTML = Object.keys(r.tipos).map(function (k) { return '<option value="' + k + '">' + esc(r.tipos[k]) + '</option>'; }).join('');
+    if (!$('m-fecha').value) $('m-fecha').value = r.hoy;
+
+    $('tab-registros').innerHTML = '<p class="sub">Últimos 40. Anular no borra: queda tachado con tu motivo.</p>' + r.ultimos.map(function (x) {
+      return '<div class="reg' + (x.anulado ? ' anulado' : '') + '"><div class="t">' + esc(x.fecha) + ' ' + esc(x.hora) + ' · ' + esc(x.persona) + ' · ' + esc(x.tipoTxt) + '</div>' +
+        '<div class="mini">' + esc(x.folio) + ' · ' + esc(x.lugar || '') + (x.dist !== '' && x.dist != null ? ' (' + esc(x.dist) + ' m)' : '') + ' · ' + esc(x.origen || '') + (x.nota ? ' · ' + esc(x.nota) : '') + '</div>' +
+        (x.alertas ? '<div class="alerta">⚠️ ' + esc(x.alertas) + '</div>' : '') +
+        '<div class="acciones-reg">' + (x.foto ? '<a href="' + esc(x.foto) + '" target="_blank" rel="noopener">Ver foto</a>' : '') +
+        (x.anulado ? '' : '<button data-anular="' + esc(x.folio) + '">Anular</button>') + '</div></div>';
+    }).join('');
+
+    $('lista-lugares').innerHTML = r.lugares.map(function (l) {
+      return '<div class="reg"><div class="t">' + esc(l.nombre) + (l.activo ? '' : ' <span class="chip gris">inactivo</span>') + '</div><div class="mini">' +
+        (l.tieneCoord ? l.lat + ', ' + l.lng + ' · radio ' + l.radio + ' m' : '<span style="color:var(--rojo)">Sin ubicación todavía</span>') + '</div></div>';
+    }).join('') || '<p class="vacio">Sin lugares.</p>';
+  }
+  $('tab-registros').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-anular]');
+    if (b) {
+      var caja = b.parentNode;
+      caja.innerHTML = '<input type="text" maxlength="150" placeholder="¿Por qué se anula? (obligatorio)">' +
+        '<button data-confirmar="' + esc(b.getAttribute('data-anular')) + '">Confirmar anulación</button>';
+      caja.querySelector('input').focus();
+      return;
+    }
+    var c = e.target.closest('[data-confirmar]'); if (!c) return;
+    var folio = c.getAttribute('data-confirmar');
+    var motivo = c.parentNode.querySelector('input').value;
+    if (!motivo || !motivo.trim()) { c.parentNode.querySelector('input').focus(); return; }
+    avisoAdmin('Anulando…');
+    run('adminAnular', S.adminPin, folio, motivo.trim()).then(function (x) { pintarAdmin(x); avisoAdmin(folio + ' anulado.'); verTab('registros'); })
+      .catch(function (err) { avisoAdmin(msgError(err)); });
+  });
+  $('btn-m-guardar').addEventListener('click', function () {
+    var d = { persona: $('m-persona').value, tipo: $('m-tipo').value, fecha: $('m-fecha').value, hora: $('m-hora').value, motivo: $('m-motivo').value.trim() };
+    if (!d.fecha || !d.hora || !d.motivo) { avisoAdmin('Llena fecha, hora y motivo.'); return; }
+    avisoAdmin('Guardando…');
+    run('adminMarcar', S.adminPin, d).then(function (x) {
+      pintarAdmin(x); $('m-motivo').value = ''; $('m-hora').value = '';
+      avisoAdmin('Guardado: ' + d.persona + ' · ' + TIPO_TXT[d.tipo] + ' ' + d.hora + '.');
+    }).catch(function (e) { avisoAdmin(msgError(e)); });
+  });
+  $('btn-l-guardar').addEventListener('click', function () {
+    var nombre = $('l-nombre').value.trim(), radio = Number($('l-radio').value) || 250;
+    if (!nombre) { avisoAdmin('Escribe el nombre del lugar.'); return; }
+    if (!navigator.geolocation) { avisoAdmin('Este navegador no da ubicación.'); return; }
+    avisoAdmin('Obteniendo tu ubicación (unos segundos)…');
+    var mejor = null, w = null, fin = false;
+    var guardar = function () {
+      if (fin) return; fin = true; try { navigator.geolocation.clearWatch(w); } catch (e) {}
+      if (!mejor) { avisoAdmin('No pude obtener la ubicación.'); return; }
+      run('adminGuardarLugar', S.adminPin, { nombre: nombre, lat: mejor.lat, lng: mejor.lng, radio: radio, acc: mejor.acc })
+        .then(function (x) { pintarAdmin(x); verTab('lugares'); avisoAdmin('Guardado "' + nombre + '" (±' + mejor.acc + ' m).'); })
+        .catch(function (e) { avisoAdmin(msgError(e)); });
+    };
+    w = navigator.geolocation.watchPosition(function (p) {
+      var g = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy) };
+      if (!mejor || g.acc < mejor.acc) mejor = g;
+      avisoAdmin('Afinando ubicación… ±' + mejor.acc + ' m');
+      if (mejor.acc <= 20) guardar();
+    }, function (err) { if (mejor) guardar(); else { fin = true; avisoAdmin('Sin permiso de ubicación o GPS apagado.'); } },
+    { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 });
+    setTimeout(guardar, 12000);
+  });
+
+  var qrHecho = '';
+  function pintarQR() {
+    var url = location.protocol === 'https:' ? location.origin + location.pathname : (S.admin && S.admin.url); // el cartel apunta a esta página
+    $('qr-url').textContent = url || 'Publica primero la aplicación web (Implementar → Nueva implementación).';
+    $('qr-clave').textContent = (S.admin && S.admin.clave) || '';
+    if (!url || qrHecho === url) return;
+    var dibujar = function () { $('qr').innerHTML = ''; new QRCode($('qr'), { text: url, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M }); qrHecho = url; };
+    if (window.QRCode) return dibujar();
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload = dibujar; s.onerror = function () { $('qr').textContent = 'No cargó el generador de QR (revisa internet).'; };
+    document.head.appendChild(s);
+  }
+  $('btn-imprimir').addEventListener('click', function () { try { window.print(); } catch (e) { avisoAdmin('Toma captura de pantalla del cartel.'); } });
+
+  iniciar();
+})();
+</script>
+</body>
+</html>
